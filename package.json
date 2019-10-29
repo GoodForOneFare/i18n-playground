@@ -1,0 +1,30 @@
+{
+  "name": "i18n-playground",
+  "version": "1.0.0",
+  "description": "",
+  "sideEffects": false,
+  "scripts": {
+    "build": "rm -fr dist; yarn webpack && ls -l dist/*",
+    "build:debug": "rm -fr dist; node --inspect-brk node_modules/.bin/webpack && ls -l dist/*",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.6.2",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@shopify/react-i18n": "*",
+    "babel-loader": "^8.0.6",
+    "react": "*",
+    "react-dom": "*",
+    "terser-webpack-plugin": "^2.1.0",
+    "ts-loader": "^6.1.2",
+    "typescript": "^3.6.3",
+    "webpack": "4.41.0"
+  },
+  "devDependencies": {
+    "@types/react": "*",
+    "webpack-cli": "^3.3.9"
+  }
+}

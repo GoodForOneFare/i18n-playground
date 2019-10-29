@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "lib": [
+        "dom",
+        "dom.iterable",
+        "es2017",
+        "es2018.asynciterable",
+        "scripthost"
+    ],
+    "moduleResolution": "node",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "jsx": "react",
+    "module": "esnext",
+    "target": "es2017",
+    "noEmit": true,
+    "sourceMap": false,
+    "baseUrl": "./",
+    "rootDir": "./"
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
