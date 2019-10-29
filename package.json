@@ -5,6 +5,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "rm -fr dist; yarn webpack && ls -l dist/*",
+    "build:cached": "rm -fr dist; CACHE=1 yarn webpack && ls -l dist/*",
     "build:debug": "rm -fr dist; node --inspect-brk node_modules/.bin/webpack && ls -l dist/*",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

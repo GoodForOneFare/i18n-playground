@@ -28,6 +28,7 @@ module.exports = {
           {
             loader: 'babel-loader',
             options: {
+              cacheDirectory: process.env.CACHE ? path.resolve(__dirname, '.cache') : null,
               plugins: [
                 '@babel/plugin-syntax-dynamic-import',
                 '@shopify/react-i18n/babel',
