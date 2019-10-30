@@ -24,6 +24,7 @@
     "rootDir": "./"
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "plugins/**/*.ts"
   ]
 }
