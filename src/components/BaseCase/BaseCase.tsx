@@ -4,6 +4,7 @@ import {useField, useForm} from '@shopify/react-form';
 
 import {Alias} from './Alias';
 import {NoTranslation} from './NoTranslation';
+import {HasArgument} from './HasArgument';
 
 export function BaseCase() {
   const [i18n] = useI18n();
@@ -18,6 +19,7 @@ export function BaseCase() {
       Hello world: ${i18n.translate('lol')}
       <Alias />
       <NoTranslation />
+      <HasArgument />
     </form>
   );
 }

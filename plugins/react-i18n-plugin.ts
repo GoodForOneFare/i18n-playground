@@ -1,12 +1,12 @@
 /*
 So we webpack plugin would:
-- Find any useI18n / withI18n calls
-- Add a top-level en.json import
-- Figure out the list of translation files
 - Insert a dynamic import statement
 - Wrap the import in a conditional statement based on the translation list
 */
-import * as webpack from 'webpack';
+import webpack from 'webpack';
+import path from 'path';
+import stringHash from 'string-hash';
+import HarmonyImportSideEffectDependency from 'webpack/lib/dependencies/HarmonyImportSideEffectDependency';
 
 const TRANSLATION_DIRECTORY_NAME =  'translations';
 
@@ -16,7 +16,6 @@ interface Options {
 
 export class ReactI18nPlugin implements webpack.Plugin {
   private options: Options;
-  // private needTransform: Map<string, string[]> = new Map();
 
   private defaultOptions: Options = {
     fallbackLocale : 'en', 
@@ -30,9 +29,8 @@ export class ReactI18nPlugin implements webpack.Plugin {
   }
 
   apply(compiler: webpack.Compiler) {
-    compiler.hooks.compilation.tap('ReactI18nPlugin', (
-      _compilation: webpack.compilation.Compilation, 
-      {normalModuleFactory}: {normalModuleFactory: webpack.compilation.NormalModuleFactory},
+    compiler.hooks.normalModuleFactory.tap('ReactI18nPlugin', (
+      normalModuleFactory: webpack.compilation.NormalModuleFactory
     ) => {
 
       const handler = (parser: any) => {
@@ -41,28 +39,53 @@ export class ReactI18nPlugin implements webpack.Plugin {
         parser.hooks.importSpecifier.tap(
           'ReactI18nPlugin',
           (_statement: any, _source: any, exportName: string, identifierName: string) => {
-            const componentPath = parser.state.module.resource;
-            if (exportName === 'useI18n') {
-              if (!parser.state.i18nImports) parser.state.i18nImports = new Map<string, string>();
-              parser.state.i18nImports.set(componentPath, identifierName);
+            
+            if (exportName !== 'useI18n') {
+              return;
             }
+
+            const componentPath = parser.state.module.resource;
+            if (!parser.state.i18nImports) parser.state.i18nImports = new Map<string, string>();
+              parser.state.i18nImports.set(componentPath, identifierName);
           },
         );
 
         parser.hooks.evaluate.for('CallExpression').tap('ReactI18nPlugin', (expression: any) => {
           const componentPath = parser.state.module.resource;
           const identifierName = parser.state.i18nImports && parser.state.i18nImports.get(componentPath);
-
-          // find when useI18n are use 
-          if (identifierName === expression.callee.name) {
-
-            // find all the translationFiles
-            const translationFiles = getTranslationFiles(parser, this.options.fallbackLocale);
-            if (translationFiles.length > 0) {
-              console.log('needTransform', expression.callee.name);
-              debugger;
-            }
+          
+          // find when useI18n are use with no argument
+          if (identifierName !== expression.callee.name || expression.arguments.length > 0) {
+            return;
           }
+          
+          const translationFiles = getTranslationFiles(parser);
+          if (translationFiles.length === 0) {
+            return;
+          }
+
+          // Add a top-level fallbackLocale import
+          const fallBackExist = translationFiles
+            .find((translationFile) => translationFile === `${this.options.fallbackLocale}.json`);
+
+          if (!fallBackExist) {
+            return;
+          }
+
+          console.log('needTransform', expression.callee.name);
+
+          const fallBackId = this.options.fallbackLocale;
+
+          const fallbackLocaleDep = new HarmonyImportSideEffectDependency(
+            `./${TRANSLATION_DIRECTORY_NAME}/${this.options.fallbackLocale}.json`,
+          );
+          parser.state.current.addDependency(fallbackLocaleDep);
+
+          debugger;
+
+          // const componentFileName = componentPath.split('/').pop().split('.')[0];
+          // const id = generateID(componentFileName);
+          // expression.arguments.push({id});
         });
       };
 
@@ -73,8 +96,8 @@ export class ReactI18nPlugin implements webpack.Plugin {
   }
 }
 
-// Return a list of translationFiles name only fall back locale exist
-function getTranslationFiles(parser: any, fallbackLocale: string): string[] {
+// Return a list of translationFiles name
+function getTranslationFiles(parser: any): string[] {
   const componentDirectory = parser.state.module.context;
   const translationsDirectoryPath = `${componentDirectory}/${TRANSLATION_DIRECTORY_NAME}`;
 
@@ -86,13 +109,18 @@ function getTranslationFiles(parser: any, fallbackLocale: string): string[] {
   } catch (error) {
     // do nothing if the directory does not exist
   }
-
-  const fallBackExist = translationFiles
-      .find((translationFile) => translationFile === `${fallbackLocale}.json`);
   
-  if (fallBackExist) {
-    return translationFiles;
-  } else {
-    return [];
-  }
+  return translationFiles;
+}
+
+
+// based on postcss-modules implementation
+// see https://github.com/css-modules/postcss-modules/blob/60920a97b165885683c41655e4ca594d15ec2aa0/src/generateScopedName.js
+function generateID(filename: string) {
+  const hash = stringHash(filename)
+    .toString(36)
+    .substr(0, 5);
+  const extension = path.extname(filename);
+  const legible = path.basename(filename, extension);
+  return `${legible}_${hash}`;
 }
