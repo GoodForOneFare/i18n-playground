@@ -1,1 +1,1 @@
-export * from './foo';
+export {BaseCase} from './BaseCase';

@@ -1,4 +1,0 @@
-export {Foo} from "./Foo";
-
-
-

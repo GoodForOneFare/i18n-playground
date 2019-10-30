@@ -1,3 +1,3 @@
-import {Foo} from './components';
+import {BaseCase} from './components';
 
-console.log(Foo);
+console.log(BaseCase);
