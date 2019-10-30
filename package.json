@@ -16,6 +16,7 @@
   "dependencies": {
     "@babel/core": "^7.6.2",
     "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@shopify/react-form": "^0.3.27",
     "@shopify/react-i18n": "*",
     "babel-loader": "^8.0.6",
     "react": "*",

@@ -28,7 +28,7 @@ const configuration = {
                             cacheDirectory: process.env.CACHE ? path.resolve(__dirname, '.cache') : null,
                             plugins: [
                                 '@babel/plugin-syntax-dynamic-import',
-                                '@shopify/react-i18n/babel',
+                                // '@shopify/react-i18n/babel',
                             ]
                         }
                     },
@@ -43,7 +43,7 @@ const configuration = {
         ]
     },
     plugins: [
-        new ReactI18nPlugin({supportedLocales: ['en', 'fr', 'jp']}),
+        new ReactI18nPlugin(),
     ],
     optimization: {
         namedModules: true,
