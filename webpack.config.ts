@@ -5,7 +5,7 @@ const configuration = {
     mode: "production",
     devtool: false,
     // @ts-ignore
-    entry: path.resolve(__dirname, 'src', 'app.ts'),
+    entry: path.resolve(__dirname, 'src', 'App.tsx'),
     output: {
         filename: "./bundle.js",
         // @ts-ignore

@@ -1,8 +1,8 @@
 import React from 'react';
 import {useI18n} from '@shopify/react-i18n';
 
-export function HasArgument() {
-  const [i18n] = useI18n({id: 'HasArgument'});
+export function MissingFallback() {
+  const [i18n] = useI18n();
 
   return (
     <div>
