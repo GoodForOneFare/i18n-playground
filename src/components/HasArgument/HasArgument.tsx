@@ -15,7 +15,10 @@ export function HasArgument() {
       }
 
       return (async () => {
-        const dictionary = await import(/* webpackChunkName: "HasArgument-i18n", webpackMode: "lazy-once" */ `./translations/${locale}.json`);
+        const dictionary = await import(
+          /* webpackChunkName: "HasArgument-i18n", webpackMode: "lazy-once" */
+          `./translations/${locale}.json`
+        );
         return dictionary && dictionary.default;
       })();
     },

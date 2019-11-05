@@ -1,16 +1,14 @@
 /*
 TODO:
-- type webpack/lib/dependencies
+- type webpack/lib/ParserHelpers
 - type Parser  
 - get it working with compose + withI18n ( it is nested under expression.arguments[0].callee.name)
-- add a top-level fallbackLocale import variable 
 */
 import webpack from 'webpack';
 import path from 'path';
 import stringHash from 'string-hash';
 import {camelCase} from 'change-case';
 
-import HarmonyImportSideEffectDependency from 'webpack/lib/dependencies/HarmonyImportSideEffectDependency';
 import ParserHelpers from 'webpack/lib/ParserHelpers';
 
 import {CallExpression} from 'estree'
@@ -96,25 +94,19 @@ export class ReactI18nPlugin implements webpack.Plugin {
             return;
           }
 
-          // TODO: Add a top-level fallbackLocale import
+          // Add a top-level fallbackLocale import
           const fallbackLocaleID = camelCase(this.options.fallbackLocale);
-          //ParserHelpers.toConstantDependency(parser, fallbackLocaleID)(`./${TRANSLATION_DIRECTORY_NAME}/${this.options.fallbackLocale}.json`);
-          // const fallbackFileDep = new HarmonyImportSideEffectDependency(
-          //   `./${TRANSLATION_DIRECTORY_NAME}/${this.options.fallbackLocale}.json`,
-          //   parser.state.lastHarmonyImportOrder + 1,
-          //   this.options.fallbackLocale,
-          // );
-          // parser.state.module.addDependency(fallbackFileDep);
-          // const req = `require(${JSON.stringify(workerLoader + '?' + JSON.stringify(loaderOptions) + '!' + dep.string)})`;
-          // ParserHelpers.addParsedVariableToModule(parser, fallbackLocaleID, req);
-          // const dep = parser.evaluateExpression(expr.arguments[0]);
-          // ParserHelpers.toConstantDependency(parser, fallbackLocaleID)(expr.arguments[0]);
 
-          // TODO: Add the fall back import into i18n call
+          const fallbackFileExpression = ParserHelpers.requireFileAsExpression(
+            parser.state.module.context,
+            `${parser.state.module.context}/${fallBackFileRelativePath}`
+          );
+          ParserHelpers.addParsedVariableToModule(parser, fallbackLocaleID, fallbackFileExpression);
+
+          // Replace i18n call arguments
           ParserHelpers.toConstantDependency(
             parser, 
-            i18nCallExpression(
-              identifierName, 
+            i18nCallArguments(
               componentPath, 
               this.options.fallbackLocale, 
               fallbackLocaleID,
@@ -156,8 +148,7 @@ function getTranslationFiles(parser: any): string[] {
   return translationFiles;
 }
 
-function i18nCallExpression(
-  identifierName: string, 
+function i18nCallArguments(
   componentPath: string,
   fallbackLocale: string,
   fallbackLocaleID: string,
@@ -172,7 +163,7 @@ function i18nCallExpression(
     .sort()
     .join(', ');
 
-  return `${identifierName}({
+  return `({
     id: '${id}',
     fallback: ${fallbackLocaleID},
     translations(locale) {
@@ -183,7 +174,10 @@ function i18nCallExpression(
       }
 
       return (async () => {
-        const dictionary = await import(/* webpackChunkName: "${id}-i18n", webpackMode: "lazy-once" */ \`./translations/$\{locale}.json\`);
+        const dictionary = await import(
+          /* webpackChunkName: "${id}-i18n", webpackMode: "lazy-once" */ 
+          \`./${TRANSLATION_DIRECTORY_NAME}/$\{locale}.json\`
+        );
         return dictionary && dictionary.default;
       })();
     },
@@ -200,36 +194,3 @@ function generateID(filename: string) {
   const legible = path.basename(filename, extension);
   return `${legible}_${hash}`;
 }
-
-
-// function getI18nIdentifierName(ast: Program): string | undefined {
-//   let i18nImportSpecifiers = [];
-
-//   try {
-//     i18nImportSpecifiers = ast.body
-//       .reduce((accumulator, node) => {
-//         if (
-//           node.type === "ImportDeclaration" && 
-//           node.source.value === "@shopify/react-i18n"
-//         ) {
-//           return accumulator.concat(node.specifiers);
-//         }
-//         return accumulator
-//       }, [] as (ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[])
-//       .filter((node) => 
-//         node.type === "ImportSpecifier" && 
-//         (node.imported.name === "useI18n" || node.imported.name === "withI18n")
-//       );
-//   } catch(error) {
-//     return;
-//   }
-            
-//   if (i18nImportSpecifiers.length === 0) {
-//     return;
-//   }
-
-//   const i18nImportSpecifier = i18nImportSpecifiers[0];
-//   const i18nIdentifierName = i18nImportSpecifier.local.name;
-
-//   return i18nIdentifierName;
-// }
