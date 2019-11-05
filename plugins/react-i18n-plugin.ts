@@ -11,8 +11,7 @@ import stringHash from 'string-hash';
 import {camelCase} from 'change-case';
 
 import HarmonyImportSideEffectDependency from 'webpack/lib/dependencies/HarmonyImportSideEffectDependency';
-import ConstDependency from 'webpack/lib/dependencies/ConstDependency';
-import NullFactory from 'webpack/lib/NullFactory';
+import ParserHelpers from 'webpack/lib/ParserHelpers';
 
 import {CallExpression} from 'estree'
 
@@ -42,13 +41,6 @@ export class ReactI18nPlugin implements webpack.Plugin {
       compilation: webpack.compilation.Compilation,
       {normalModuleFactory}: {normalModuleFactory: webpack.compilation.NormalModuleFactory}
     ) => {
-      // TODO: do I need these?
-      compilation.dependencyFactories.set(ConstDependency, new NullFactory());
-      compilation.dependencyTemplates.set(
-          ConstDependency,
-          new ConstDependency.Template()
-      );
-
       const handler = (parser: any) => {
 
         parser.hooks.importSpecifier.tap(
@@ -85,18 +77,7 @@ export class ReactI18nPlugin implements webpack.Plugin {
             return;
           }
 
-          const componentDirectory = parser.state.module.context;
-          const translationsDirectoryPath = `${componentDirectory}/${TRANSLATION_DIRECTORY_NAME}`;
-
-          let translationFiles: string[] = [];
-          try {
-            translationFiles = parser.state.compilation.compiler.inputFileSystem.readdirSync(
-              translationsDirectoryPath,
-            );
-          } catch (error) {
-            // do nothing if the directory does not exist
-          }
-          
+          const translationFiles = getTranslationFiles(parser);
           if (translationFiles.length === 0) {
             return;
           }
@@ -104,45 +85,75 @@ export class ReactI18nPlugin implements webpack.Plugin {
           const fallBackExist = translationFiles
             .find((translationFile) => translationFile === `${this.options.fallbackLocale}.json`);
 
+          const fallBackFileRelativePath = `./${TRANSLATION_DIRECTORY_NAME}/${this.options.fallbackLocale}.json`;
+
           if (!fallBackExist) {
             compilation.errors.push(
               `${componentPath}\n` + 
               `${identifierName} 's arguments was not automatically filled in because` + 
-              `fallback translation file was not found at ${translationsDirectoryPath}/${this.options.fallbackLocale}.json \n`
+              `fallback translation file was not found at ${fallBackFileRelativePath} \n`
             );
             return;
           }
 
           // TODO: Add a top-level fallbackLocale import
           const fallbackLocaleID = camelCase(this.options.fallbackLocale);
-          const fallbackFileDep = new HarmonyImportSideEffectDependency(
-            `./${TRANSLATION_DIRECTORY_NAME}/${this.options.fallbackLocale}.json`,
-            parser.state.lastHarmonyImportOrder + 1,
-            this.options.fallbackLocale,
-          );
-          parser.state.module.addDependency(fallbackFileDep);
+          //ParserHelpers.toConstantDependency(parser, fallbackLocaleID)(`./${TRANSLATION_DIRECTORY_NAME}/${this.options.fallbackLocale}.json`);
+          // const fallbackFileDep = new HarmonyImportSideEffectDependency(
+          //   `./${TRANSLATION_DIRECTORY_NAME}/${this.options.fallbackLocale}.json`,
+          //   parser.state.lastHarmonyImportOrder + 1,
+          //   this.options.fallbackLocale,
+          // );
+          // parser.state.module.addDependency(fallbackFileDep);
+          // const req = `require(${JSON.stringify(workerLoader + '?' + JSON.stringify(loaderOptions) + '!' + dep.string)})`;
+          // ParserHelpers.addParsedVariableToModule(parser, fallbackLocaleID, req);
+          // const dep = parser.evaluateExpression(expr.arguments[0]);
+          // ParserHelpers.toConstantDependency(parser, fallbackLocaleID)(expr.arguments[0]);
 
           // TODO: Add the fall back import into i18n call
-          const i18nCallDependency = new ConstDependency(
+          ParserHelpers.toConstantDependency(
+            parser, 
             i18nCallExpression(
               identifierName, 
               componentPath, 
               this.options.fallbackLocale, 
               fallbackLocaleID,
               translationFiles
-            ), 
-            expression.range
-          );
-          i18nCallDependency.loc = expression.loc;
-          parser.state.module.addDependency(i18nCallDependency);
+            ),
+          )(expression);
         });
       };
 
       normalModuleFactory.hooks.parser
           .for('javascript/auto')
           .tap('HarmonyModulesPlugin', handler);
+
+      normalModuleFactory.hooks.parser
+        .for('javascript/esm')
+        .tap('HarmonyModulesPlugin', handler);
+
+      normalModuleFactory.hooks.parser
+        .for('javascript/dynamic')
+        .tap('HarmonyModulesPlugin', handler);
     });
   }
+}
+
+// Return a list of translationFiles name	function i18nCallExpression(
+function getTranslationFiles(parser: any): string[] {
+  const componentDirectory = parser.state.module.context;
+  const translationsDirectoryPath = `${componentDirectory}/${TRANSLATION_DIRECTORY_NAME}`;
+
+  let translationFiles: string[] = [];
+  try {
+    translationFiles = parser.state.compilation.compiler.inputFileSystem.readdirSync(
+      translationsDirectoryPath,
+    );
+  } catch (error) {
+    // do nothing if the directory does not exist
+  }
+  
+  return translationFiles;
 }
 
 function i18nCallExpression(
