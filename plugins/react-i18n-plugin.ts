@@ -1,9 +1,3 @@
-/*
-TODO:
-- type webpack/lib/ParserHelpers
-- type Parser  
-- get it working with compose + withI18n ( it is nested under expression.arguments[0].callee.name)
-*/
 import webpack from 'webpack';
 import path from 'path';
 import stringHash from 'string-hash';
@@ -12,7 +6,7 @@ import {camelCase} from 'change-case';
 import VirtualModulesPlugin from 'webpack-virtual-modules';
 import ParserHelpers from 'webpack/lib/ParserHelpers';
 
-import {CallExpression} from 'estree'
+import {CallExpression, Expression, SpreadElement} from 'estree'
 
 const PLUGIN_NAME = 'ReactI18nPlugin';
 const TRANSLATION_DIRECTORY_NAME =  'translations';
@@ -60,7 +54,7 @@ export class ReactI18nPlugin implements webpack.Plugin {
         );
 
         // replace useI18n & withI18n call arguments
-        parser.hooks.evaluate.for('CallExpression').tap(PLUGIN_NAME, (expression: CallExpression) => {
+        parser.hooks.evaluate.for('CallExpression').tap(PLUGIN_NAME, (originalExpression: CallExpression) => {
           if (
             parser.state.module.resource.indexOf('node_modules') !== -1 &&
             !parser.state.module.resource.endsWith('tsx') &&
@@ -73,11 +67,29 @@ export class ReactI18nPlugin implements webpack.Plugin {
           const componentDir = parser.state.module.context;
           const identifierName = parser.state.i18nImports.get(componentPath);
 
-          // skip calls where consumer manually added arguments
           if (!identifierName ||
-            expression.callee.type !== 'Identifier' || 
-            expression.callee.name !== identifierName ||
-            expression.arguments.length > 0
+            originalExpression.callee.type !== 'Identifier'
+          ) {
+            return;
+          }
+          debugger;
+
+          let expression: CallExpression | null = null;
+          if (originalExpression.callee.name === 'compose') {
+
+            const foundExpressions: Array<Expression | SpreadElement> = originalExpression.arguments
+              .filter(node => node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === identifierName);
+            
+            if (foundExpressions.length > 0) {
+              expression = foundExpressions[0] as CallExpression;
+            }
+
+          } else if (originalExpression.callee.name === identifierName) {
+            expression = originalExpression;
+          }
+
+          // skip calls where consumer manually added arguments
+          if (!expression || expression.arguments.length > 0
           ) {
             return;
           }

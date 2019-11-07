@@ -16,7 +16,3 @@ export function App() {
   );
 }
 console.log(App);
-
-// import {BaseCase} from './components/BaseCase';
-
-// console.log(BaseCase);
