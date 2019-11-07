@@ -1,22 +1,4 @@
 import React from 'react';
-import {BaseCase, Alias, HigherOrder, HigherOrderWithCompose, NoTranslation, HasArgument, MissingFallback} from './components';
+import {BaseCase} from './components/BaseCase';
 
-export function App() {
-  return (
-    <div>
-      <BaseCase />
-      <Alias />
-      <HigherOrder />
-      <HigherOrderWithCompose />
-      <NoTranslation />
-      <HasArgument />
-      {/* Delete MissingFallback/en.json to test below error */}
-      <MissingFallback /> 
-    </div>
-  );
-}
-console.log(App);
-
-// import {BaseCase} from './components/BaseCase';
-
-// console.log(BaseCase);
+console.log(BaseCase);

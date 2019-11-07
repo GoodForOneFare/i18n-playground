@@ -11,6 +11,7 @@ import {camelCase} from 'change-case';
 
 import VirtualModulesPlugin from 'webpack-virtual-modules';
 import ParserHelpers from 'webpack/lib/ParserHelpers';
+import ImportContextDependency from 'webpack/lib//dependencies/ImportContextDependency';
 
 import {CallExpression} from 'estree'
 
@@ -114,31 +115,39 @@ export class ReactI18nPlugin implements webpack.Plugin {
           // Replace i18n call arguments
           const componentFileName = componentPath.split('/').pop()!.split('.')[0];
           const id = generateID(componentFileName);
-          const chunkName = getChunkName(id);
-          const translationFactoryName = 'translationFactory';
 
           ParserHelpers.toConstantDependency(
             parser, 
-            i18nCallArguments({
+            i18nCallArguments(
               id, 
-              translationFactoryName,
-              fallbackLocale: this.options.fallbackLocale, 
+              this.options.fallbackLocale, 
               fallbackLocaleID,
               translationFiles
-            }),
+            ),
           )(expression);
 
-          // add translation function import
-          const factoryPath = path.join(componentDir, TRANSLATION_DIRECTORY_NAME, 'translationFactory.js');
-          const factorySource = buildFactorySource(chunkName);
-          virtualModules.writeModule(factoryPath, factorySource);
 
-          const asyncTranslationFactoryExpression = ParserHelpers.requireFileAsExpression(
-            parser.state.module.context,
-            factoryPath
+          const dep = new ImportContextDependency(
+            Object.assign(
+              {
+                request: `./${TRANSLATION_DIRECTORY_NAME}`,
+                recursive: true,
+                regExp: new RegExp('^\\.\\/.*\\.json$'),
+                mode: "sync"
+              },
+              {
+                chunkName: getChunkName(id),
+                mode:  "lazy-once",
+                namespaceObject: true,
+              }
+            ),
+            expression.range,
+            // play with this number to see __webpack_require__("./src/components/BaseCase/translations... change places
+            // [120, 129] is the same as expression.range
+            [129, 129], 
           );
-          ParserHelpers.addParsedVariableToModule(parser, translationFactoryName, asyncTranslationFactoryExpression);
-         
+          dep.loc = expression.loc;
+          parser.state.current.addDependency(dep);
         });
       };
 
@@ -179,20 +188,10 @@ function getChunkName(id: string) {
 }
 
 function i18nCallArguments(
-  {
-    id,
-    translationFactoryName,
-    fallbackLocale, 
-    fallbackLocaleID,
-    translationFiles,
-  }: 
-  {
-    id: string;
-    translationFactoryName: string;
-    fallbackLocale: string;
-    fallbackLocaleID: string;
-    translationFiles: string[],
-  }
+  id: string,
+  fallbackLocale: string,
+  fallbackLocaleID: string,
+  translationFiles: string[],
 ): string {
   
   const translations = translationFiles
@@ -211,22 +210,15 @@ function i18nCallArguments(
         return;
       }
 
-      return ${translationFactoryName}(locale);
-    },
-  })`
-}
-
-function buildFactorySource(chunkName: string) {
-  return `
-    function translationFactory(locale) {
-      return async () => {
+      return (async () => {
         const dictionary = await import(
-          /* webpackChunkName: "${chunkName}", webpackMode: "lazy-once" */ 
-          \`./$\{locale}.json\`
+          /* webpackChunkName: "${getChunkName(id)}", webpackMode: "lazy-once" */ 
+          \`./${TRANSLATION_DIRECTORY_NAME}/$\{locale}.json\`
         );
         return dictionary && dictionary.default;
-      }
-    }`;
+      })(locale);
+    },
+  })`
 }
 
 // based on postcss-modules implementation
