@@ -1,5 +1,5 @@
 import * as path from 'path';
-import {ReactI18nPlugin} from "./plugins/react-i18n-plugin";
+import {ReactI18nPlugin} from "@shopify/react-i18n-webpack-plugin";
 
 const configuration = {
     mode: "production",

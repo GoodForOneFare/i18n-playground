@@ -219,6 +219,18 @@
   resolved "https://registry.yarnpkg.com/@shopify/react-hooks/-/react-hooks-1.2.5.tgz#0d2f27995a0b7fccc677f870a8f0fc87538d5d7b"
   integrity sha512-LkonC9WACjSjauc7g053Q5eR4NcQsmAkXAGYMnb0QZ3UL5YuLXOtuh199nXe24KDbV4QwFX9A+zR67JSnFx+pQ==
 
+"@shopify/react-i18n-webpack-plugin@0.0.0-remove-babel-beta.1":
+  version "0.0.0-remove-babel-beta.1"
+  resolved "https://registry.yarnpkg.com/@shopify/react-i18n-webpack-plugin/-/react-i18n-webpack-plugin-0.0.0-remove-babel-beta.1.tgz#7ba2e8208caa7d420e591cae3a397119cd369b57"
+  integrity sha512-YcGiGXTMbrpEP5hRLfY5jrlkLNkdDO0mZo0LKEtOqInEV+8Tt0KlRqSL6/RrHH/ehhUrWvFUUCtfUZKw2qGRMA==
+  dependencies:
+    "@types/webpack" "^4.0.0"
+    change-case "^3.1.0"
+    string-hash "^1.1.3"
+    webpack-virtual-modules "^0.1.12"
+  optionalDependencies:
+    webpack "^4.40.0"
+
 "@shopify/react-i18n@*":
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/@shopify/react-i18n/-/react-i18n-2.1.3.tgz#fb40a7e9e403dea32b38e6475fb689d45ce136ca"
@@ -260,11 +272,6 @@
   resolved "https://registry.yarnpkg.com/@types/anymatch/-/anymatch-1.3.1.tgz#336badc1beecb9dacc38bea2cf32adf627a8421a"
   integrity sha512-/+CRPXpBDpo2RK9C68N3b2cOvO0Cf5B9aPijHsoDQTHivnGSObdOF2BRQOYjojWTDy6nQvMjmqRXIxH55VjxxA==
 
-"@types/estree@0.0.39":
-  version "0.0.39"
-  resolved "https://registry.yarnpkg.com/@types/estree/-/estree-0.0.39.tgz#e177e699ee1b8c22d23174caaa7422644389509f"
-  integrity sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
-
 "@types/hoist-non-react-statics@^3.0.1":
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/@types/hoist-non-react-statics/-/hoist-non-react-statics-3.3.1.tgz#1124aafe5118cb591977aeb1ceaaed1070eb039f"
@@ -296,11 +303,6 @@
   resolved "https://registry.yarnpkg.com/@types/source-list-map/-/source-list-map-0.1.2.tgz#0078836063ffaf17412349bba364087e0ac02ec9"
   integrity sha512-K5K+yml8LTo9bWJI/rECfIPrGgxdpeNbj+d53lwN4QjW1MCwlkhUms+gtdzigTeUyBr09+u8BwOIY3MXvHdcsA==
 
-"@types/string-hash@^1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@types/string-hash/-/string-hash-1.1.1.tgz#4c336e61d1e13ce2d3efaaa5910005fd080e106b"
-  integrity sha512-ijt3zdHi2DmZxQpQTmozXszzDo78V4R3EdvX0jFMfnMH2ZzQSmCbaWOMPGXFUYSzSIdStv78HDjg32m5dxc+tA==
-
 "@types/tapable@*":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@types/tapable/-/tapable-1.0.4.tgz#b4ffc7dc97b498c969b360a41eee247f82616370"
@@ -322,10 +324,10 @@
     "@types/source-list-map" "*"
     source-map "^0.6.1"
 
-"@types/webpack@^4.39.5":
-  version "4.39.5"
-  resolved "https://registry.yarnpkg.com/@types/webpack/-/webpack-4.39.5.tgz#3671b65928d9e0c6fcd4adff3f8167d48b174681"
-  integrity sha512-9twG6D97ao13MBLvigwfBJe6rxtb04UY3TcYHBYkW5sXZjUrNhqIRxLYg74VzK/YAE8xlVhOyd+3Whr7E5RrBA==
+"@types/webpack@^4.0.0":
+  version "4.39.8"
+  resolved "https://registry.yarnpkg.com/@types/webpack/-/webpack-4.39.8.tgz#8083a4eb850ea02961ef6161465434c9b478851f"
+  integrity sha512-lkJvwNJQUPW2SbVwAZW9s9whJp02nzLf2yTNwMULa4LloED9MYS1aNnGeoBCifpAI1pEBkTpLhuyRmBnLEOZAA==
   dependencies:
     "@types/anymatch" "*"
     "@types/node" "*"
@@ -3587,17 +3589,17 @@ webpack-sources@^1.4.0, webpack-sources@^1.4.1, webpack-sources@^1.4.3:
     source-list-map "^2.0.0"
     source-map "~0.6.1"
 
-webpack-virtual-modules@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/webpack-virtual-modules/-/webpack-virtual-modules-0.2.0.tgz#dd13e089898ee14a77717d37a9848b40a9b1068b"
-  integrity sha512-Leo4r6Sjj0HkoeP9vtQzm1abUm6UJc6gK1KrqNakIer+03mCyFVivGOFy0I0NFpRrv+kQm3UKstjWg0Fe+JqUQ==
+webpack-virtual-modules@^0.1.12:
+  version "0.1.12"
+  resolved "https://registry.yarnpkg.com/webpack-virtual-modules/-/webpack-virtual-modules-0.1.12.tgz#ff6430c1d6f514eff12bae773ec03e5043a81943"
+  integrity sha512-uwVhcpmh7WykpP2fD4T//5DLdMuanPHGXQHCnIrKoRg10GgVNy5z2oAcn26HLF67a6HCSzgc9xar+SMtZhOnXw==
   dependencies:
     debug "^3.0.0"
 
-webpack@4.41.0:
-  version "4.41.0"
-  resolved "https://registry.yarnpkg.com/webpack/-/webpack-4.41.0.tgz#db6a254bde671769f7c14e90a1a55e73602fc70b"
-  integrity sha512-yNV98U4r7wX1VJAj5kyMsu36T8RPPQntcb5fJLOsMz/pt/WrKC0Vp1bAlqPLkA1LegSwQwf6P+kAbyhRKVQ72g==
+webpack@^4.40.0, webpack@~4.41.0:
+  version "4.41.2"
+  resolved "https://registry.yarnpkg.com/webpack/-/webpack-4.41.2.tgz#c34ec76daa3a8468c9b61a50336d8e3303dce74e"
+  integrity sha512-Zhw69edTGfbz9/8JJoyRQ/pq8FYUoY0diOXqW0T6yhgdhCv6wr0hra5DwwWexNRns2Z2+gsnrNcbe9hbGBgk/A==
   dependencies:
     "@webassemblyjs/ast" "1.8.5"
     "@webassemblyjs/helper-module-context" "1.8.5"

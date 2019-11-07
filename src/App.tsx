@@ -1,17 +1,19 @@
 import React from 'react';
-import {BaseCase, Alias, HigherOrder, HigherOrderWithCompose, NoTranslation, HasArgument, MissingFallback} from './components';
+import {BaseCase, Alias, HigherOrder, HigherOrderWithCompose, MultiUse, SameFileNameOne, SameFileNameTwo, SharedTranslation, NoTranslation, HasArgument} from './components';
 
 export function App() {
   return (
     <div>
-      <BaseCase />
       <Alias />
-      <HigherOrder />
-      <HigherOrderWithCompose />
-      <NoTranslation />
+      <BaseCase />
       <HasArgument />
-      {/* Delete MissingFallback/en.json to test below error */}
-      <MissingFallback /> 
+      <HigherOrderWithCompose />
+      <HigherOrder />
+      <MultiUse />
+      <SameFileNameOne />
+      <SameFileNameTwo />
+      <SharedTranslation />
+      <NoTranslation />
     </div>
   );
 }
