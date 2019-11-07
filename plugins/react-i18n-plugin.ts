@@ -9,6 +9,7 @@ import path from 'path';
 import stringHash from 'string-hash';
 import {camelCase} from 'change-case';
 
+import VirtualModulesPlugin from 'webpack-virtual-modules';
 import ParserHelpers from 'webpack/lib/ParserHelpers';
 
 import {CallExpression} from 'estree'
@@ -35,12 +36,16 @@ export class ReactI18nPlugin implements webpack.Plugin {
   }
 
   apply(compiler: webpack.Compiler) {
+    const virtualModules = new VirtualModulesPlugin();
+    virtualModules.apply(compiler);
+
     compiler.hooks.compilation.tap(PLUGIN_NAME, (
       compilation: webpack.compilation.Compilation,
       {normalModuleFactory}: {normalModuleFactory: webpack.compilation.NormalModuleFactory}
     ) => {
-      const handler = (parser: any) => {
 
+      const handler = (parser: any) => {
+        // find all the identifierName for useI18n & withI18n import
         parser.hooks.importSpecifier.tap(
           PLUGIN_NAME,
           (_statement: string, source: string, exportName: string, identifierName: string) => {
@@ -54,6 +59,7 @@ export class ReactI18nPlugin implements webpack.Plugin {
           },
         );
 
+        // replace useI18n & withI18n call arguments
         parser.hooks.evaluate.for('CallExpression').tap(PLUGIN_NAME, (expression: CallExpression) => {
           if (
             parser.state.module.resource.indexOf('node_modules') !== -1 &&
@@ -64,6 +70,7 @@ export class ReactI18nPlugin implements webpack.Plugin {
           }
 
           const componentPath = parser.state.module.resource;
+          const componentDir = parser.state.module.context;
           const identifierName = parser.state.i18nImports.get(componentPath);
 
           // skip calls where consumer manually added arguments
@@ -80,10 +87,11 @@ export class ReactI18nPlugin implements webpack.Plugin {
             return;
           }
 
+          // check if fall back exist
           const fallBackExist = translationFiles
             .find((translationFile) => translationFile === `${this.options.fallbackLocale}.json`);
 
-          const fallBackFileRelativePath = `./${TRANSLATION_DIRECTORY_NAME}/${this.options.fallbackLocale}.json`;
+          const fallBackFileRelativePath = path.join('./', TRANSLATION_DIRECTORY_NAME, `${this.options.fallbackLocale}.json`);
 
           if (!fallBackExist) {
             compilation.errors.push(
@@ -98,21 +106,39 @@ export class ReactI18nPlugin implements webpack.Plugin {
           const fallbackLocaleID = camelCase(this.options.fallbackLocale);
 
           const fallbackFileExpression = ParserHelpers.requireFileAsExpression(
-            parser.state.module.context,
-            `${parser.state.module.context}/${fallBackFileRelativePath}`
+            componentDir,
+            path.join(componentDir, fallBackFileRelativePath),
           );
           ParserHelpers.addParsedVariableToModule(parser, fallbackLocaleID, fallbackFileExpression);
 
           // Replace i18n call arguments
+          const componentFileName = componentPath.split('/').pop()!.split('.')[0];
+          const id = generateID(componentFileName);
+          const chunkName = getChunkName(id);
+          const translationFactoryName = 'translationFactory';
+
           ParserHelpers.toConstantDependency(
             parser, 
-            i18nCallArguments(
-              componentPath, 
-              this.options.fallbackLocale, 
+            i18nCallArguments({
+              id, 
+              translationFactoryName,
+              fallbackLocale: this.options.fallbackLocale, 
               fallbackLocaleID,
               translationFiles
-            ),
+            }),
           )(expression);
+
+          // add translation function import
+          const factoryPath = path.join(componentDir, TRANSLATION_DIRECTORY_NAME, 'translationFactory.js');
+          const factorySource = buildFactorySource(chunkName);
+          virtualModules.writeModule(factoryPath, factorySource);
+
+          const asyncTranslationFactoryExpression = ParserHelpers.requireFileAsExpression(
+            parser.state.module.context,
+            factoryPath
+          );
+          ParserHelpers.addParsedVariableToModule(parser, translationFactoryName, asyncTranslationFactoryExpression);
+         
         });
       };
 
@@ -148,15 +174,27 @@ function getTranslationFiles(parser: any): string[] {
   return translationFiles;
 }
 
+function getChunkName(id: string) {
+  return `${id}-i18n`;
+}
+
 function i18nCallArguments(
-  componentPath: string,
-  fallbackLocale: string,
-  fallbackLocaleID: string,
-  translationFiles: string[],
+  {
+    id,
+    translationFactoryName,
+    fallbackLocale, 
+    fallbackLocaleID,
+    translationFiles,
+  }: 
+  {
+    id: string;
+    translationFactoryName: string;
+    fallbackLocale: string;
+    fallbackLocaleID: string;
+    translationFiles: string[],
+  }
 ): string {
   
-  const componentFileName = componentPath.split('/').pop()!.split('.')[0];
-  const id = generateID(componentFileName);
   const translations = translationFiles
     .filter(translationFile => !translationFile.endsWith(`${fallbackLocale}.json`))
     .map(translationFile => JSON.stringify(path.basename(translationFile, path.extname(translationFile))))
@@ -173,15 +211,22 @@ function i18nCallArguments(
         return;
       }
 
-      return (async () => {
-        const dictionary = await import(
-          /* webpackChunkName: "${id}-i18n", webpackMode: "lazy-once" */ 
-          \`./${TRANSLATION_DIRECTORY_NAME}/$\{locale}.json\`
-        );
-        return dictionary && dictionary.default;
-      })();
+      return ${translationFactoryName}(locale);
     },
   })`
+}
+
+function buildFactorySource(chunkName: string) {
+  return `
+    function translationFactory(locale) {
+      return async () => {
+        const dictionary = await import(
+          /* webpackChunkName: "${chunkName}", webpackMode: "lazy-once" */ 
+          \`./$\{locale}.json\`
+        );
+        return dictionary && dictionary.default;
+      }
+    }`;
 }
 
 // based on postcss-modules implementation

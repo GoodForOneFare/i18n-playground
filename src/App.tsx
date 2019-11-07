@@ -15,6 +15,8 @@ export function App() {
     </div>
   );
 }
-
-
 console.log(App);
+
+// import {BaseCase} from './components/BaseCase';
+
+// console.log(BaseCase);
