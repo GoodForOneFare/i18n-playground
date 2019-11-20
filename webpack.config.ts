@@ -1,5 +1,5 @@
 import * as path from 'path';
-import {ReactI18nPlugin} from "@shopify/react-i18n-webpack-plugin";
+import {ReactI18nCacheBusterPlugin} from "@shopify/react-i18n-webpack-plugin";
 
 const configuration = {
     mode: "production",
@@ -28,7 +28,7 @@ const configuration = {
                             cacheDirectory: process.env.CACHE ? path.resolve(__dirname, '.cache') : null,
                             plugins: [
                                 '@babel/plugin-syntax-dynamic-import',
-                                // '@shopify/react-i18n/babel',
+                                '@shopify/react-i18n-webpack-plugin/babel',
                             ]
                         }
                     },
@@ -43,7 +43,7 @@ const configuration = {
         ]
     },
     plugins: [
-        new ReactI18nPlugin(),
+        new ReactI18nCacheBusterPlugin(),
     ],
     optimization: {
         namedModules: true,

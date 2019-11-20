@@ -1,6 +1,6 @@
 // Positive Cases
-export {BaseCase} from './BaseCase';
 export {Alias} from './Alias';
+export {BaseCase} from './BaseCase';
 export {HigherOrder} from './HigherOrder';
 export {HigherOrderWithCompose} from './HigherOrderWithCompose';
 export {MultiUse} from './MultiUse';
