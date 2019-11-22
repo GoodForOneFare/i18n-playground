@@ -3,3 +3,4 @@ node_modules
 .cache
 webpack.config.js
 plugins/*.js
+**/translations/index.js

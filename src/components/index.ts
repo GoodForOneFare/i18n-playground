@@ -3,7 +3,6 @@ export {Alias} from './Alias';
 export {BaseCase} from './BaseCase';
 export {HigherOrder} from './HigherOrder';
 export {HigherOrderWithCompose} from './HigherOrderWithCompose';
-export {MultiUse} from './MultiUse';
 export {SameFileName as SameFileNameOne} from './SameFileNameOne';
 export {SameFileName as SameFileNameTwo} from './SameFileNameTwo';
 export {SharedTranslation} from './SharedTranslation';

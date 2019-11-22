@@ -9,7 +9,6 @@ export function App() {
       <HasArgument />
       <HigherOrderWithCompose />
       <HigherOrder />
-      <MultiUse />
       <SameFileNameOne />
       <SameFileNameTwo />
       <SharedTranslation />
